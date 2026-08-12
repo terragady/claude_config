@@ -40,7 +40,7 @@ One line, imperative, no trailing period — it becomes the squash-merge commit 
 ```
 <type>: <concise summary>          # feat: add credit-card success page
 <type>(scope): <summary>           # fix(auth): reject expired refresh tokens
-<type>: <KEY> <summary>            # feat: BW-10497 add credit-card success page  (Jira)
+<type>: <KEY> <summary>            # feat: PROJ-10497 add credit-card success page  (Jira)
 ```
 
 - Reuse the Conventional Commit type set from `commit` (`feat`, `fix`, `refactor`, `perf`, `docs`, …).
@@ -61,7 +61,7 @@ GitHub-flavored markdown. Keep the sections that carry signal and drop the ones 
 
 ## Why
 <Motivation / context. Link the source of truth:>
-Closes #123   ·   Jira: https://storebrand.atlassian.net/browse/BW-10497
+Closes #123   ·   Jira: https://your-site.atlassian.net/browse/PROJ-10497
 
 ## How it was verified
 - Tests: <`npm test` → 42 passing, +3 new>
