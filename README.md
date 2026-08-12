@@ -1,8 +1,8 @@
 # claude_config
 
-My personal configuration for **Claude Code** (packaged at Storebrand as
-`storecode`): a curated set of *skills*, *commands*, and *helper scripts*, adapted
-from [JimmyTranDev/dotfiles](https://github.com/JimmyTranDev/dotfiles) and
+My personal configuration for **Claude Code**: a curated set of *skills*,
+*commands*, and *helper scripts*, adapted from
+[JimmyTranDev/dotfiles](https://github.com/JimmyTranDev/dotfiles) and
 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills).
 
 Everything lives in this repo and is symlinked into `~/.claude` by `install.sh`,
@@ -13,7 +13,7 @@ so it's version-controlled and reproducible.
 ## Contents
 
 - [Quick start](#quick-start)
-- [Background: what is storecode, and where does config live?](#background)
+- [Background: where does config live?](#background)
 - [Skills vs commands vs subagents](#skills-vs-commands-vs-subagents)
 - [How do I invoke them?](#how-do-i-invoke-them)
 - [The daily workflow: how to work a feature](#the-daily-workflow)
@@ -21,7 +21,7 @@ so it's version-controlled and reproducible.
 - [What's installed](#whats-installed)
 - [The `scripts/ai/` helper library](#the-scriptsai-helper-library)
 - [How to add more skills later](#how-to-add-more)
-- [FAQ (your original questions)](#faq)
+- [FAQ](#faq)
 
 ---
 
@@ -33,7 +33,7 @@ cd ~/code/claude_config
 ./install.sh               # symlink skills/ + commands/ into ~/.claude, chmod scripts
 ```
 
-Then **restart storecode** (start a new session) and type `/` — you should see
+Then **restart Claude Code** (start a new session) and type `/` — you should see
 `/implement`, `/fix`, `/commit`, `/create-jira-ticket`, `/review-pr`,
 `/undraft-pr`.
 
@@ -48,17 +48,14 @@ acli auth login
 
 ## Background
 
-**"storecode" is Storebrand's packaged distribution of Claude Code.** Under the
-hood it *is* Claude Code (`~/.storecode/lib/claude`), wrapped with company
-governance (an MCP allow/deny list, a `rampart` policy layer). That means:
-
-- **Your editable config lives in `~/.claude/`** — same as vanilla Claude Code.
-  This is where `CLAUDE.md`, `settings.json`, and (after install) `skills/` and
-  `commands/` live.
-- **`~/.storecode/` is the company layer** — the binary and policy. You don't put
-  your skills there.
-- Because the company maintains an **MCP allow/deny list**, MCP servers may be
-  restricted. That's a big reason this config uses a **CLI for Jira** (`acli`)
+- **Your editable config lives in `~/.claude/`** — this is where `CLAUDE.md`,
+  `settings.json`, and (after install) `skills/` and `commands/` live.
+- Some workplaces ship Claude Code as a **managed distribution**: the same binary
+  under the hood, wrapped in its own directory with a governance layer (an MCP
+  allow/deny list, a policy engine). If that's your setup, the managed directory
+  is *not* where your skills go — `~/.claude/` still is.
+- Where MCP servers are governed by an allow/deny list they may simply be
+  unavailable. That's a big reason this config uses a **CLI for Jira** (`acli`)
   instead of an MCP server — see [Jira setup](#jira-setup).
 
 Config resolution order (highest wins): enterprise-managed → **personal
@@ -85,8 +82,8 @@ Three different things. None is "better" — they solve different problems.
   commands and other skills.
 - A **subagent** is for work that would flood your context (search 100 files, run
   the whole suite) or needs its own tool limits. This config ships **no custom
-  subagents** — storecode's built-in ones (Explore, Plan, general-purpose) are
-  enough to start.
+  subagents** — the built-in ones (Explore, Plan, general-purpose) are enough to
+  start.
 
 > **Why a separate `commands/` folder at all?** Historically Claude Code kept
 > commands and skills separate; they have since largely merged (a
@@ -104,7 +101,7 @@ Three ways — mostly it's **automatic**:
    loads the matching one when your request fits. This is why descriptions are
    long and full of trigger phrases. Just say *"commit my changes"* and the
    `commit` skill kicks in.
-2. **Slash command.** Type `/commit`, `/implement BW-1234`, etc. Anything after
+2. **Slash command.** Type `/commit`, `/implement PROJ-1234`, etc. Anything after
    the command name becomes its `$ARGUMENTS`.
 3. **Explicit.** Say *"use the commit skill"* to force it.
 
@@ -117,7 +114,7 @@ Subagents auto-delegate, or you force one with `@agent-<name>`.
 **How to start a feature — the one command to remember is `/implement`.**
 
 ```
-/implement BW-1234
+/implement PROJ-1234
 ```
 
 (or `/implement add a CSV export button to the reports page` if there's no ticket)
@@ -170,9 +167,9 @@ acli auth status         # verify
 Optionally set environment variables Jimmy's flow understands (e.g. in `~/.zshrc`):
 
 ```bash
-export ORG_NAME="storebrand"                 # used to build browse URLs
-export ORG_EMAIL="marcin.michalik@storebrand.no"
-# default project key is BW in the create-jira-ticket skill; adjust if yours differs
+export ORG_NAME="your-site"                  # used to build browse URLs
+export ORG_EMAIL="you@example.com"
+# set your own default project key in the create-jira-ticket skill
 ```
 
 ### "Should I remove the Jira MCP, or will it pick the CLI itself?"
@@ -184,10 +181,9 @@ skill contains a hard rule** — *never WebFetch `*.atlassian.net`, always use
 
 **CLI vs MCP, briefly:** a CLI needs no running server, reuses your terminal auth,
 is fully scriptable, and only puts output in context when asked. An MCP server is
-better for heavy, autonomous, structured tool use — but at Storebrand MCP servers
-are governed by an allow/deny list, so the CLI is the simpler, reliable choice
-here. If a Jira MCP ever appears in the allowlist, keep it off; the skill still
-prefers `acli`.
+better for heavy, autonomous, structured tool use — but where MCP servers are
+governed by an allow/deny list, the CLI is the simpler, reliable choice. If a Jira
+MCP ever becomes available, you can still keep it off; the skill prefers `acli`.
 
 ---
 
@@ -208,7 +204,7 @@ prefers `acli`.
 | Review | `code-review-and-quality`, `code-simplification`, `security-and-hardening` |
 | Ship | `commit`, `git-workflow-and-versioning`, `github-pr-description`, `acli` |
 
-> **Note on overlap with built-ins:** storecode already ships `/code-review`,
+> **Note on overlap with built-ins:** Claude Code already ships `/code-review`,
 > `/simplify`, `/verify`, `/deep-research`, and more. Jimmy's
 > `code-review-and-quality` / `code-simplification` overlap with those — that's
 > fine; use whichever you prefer. These are kept because the `implement` /
@@ -233,7 +229,7 @@ teaches this). They auto-detect the stack (npm/pnpm/yarn, cargo, go, python, jvm
 
 Run them from any project: `bash ~/code/claude_config/scripts/ai/verify-all.sh`.
 If a script doesn't fit a project's stack it says so (and exits 0) rather than
-guessing. Adjust them to match Storebrand's conventions as you learn them.
+guessing. Adjust them to match your team's conventions.
 
 ---
 
@@ -256,13 +252,13 @@ skills you *haven't* installed and trim them (like we did here).
 
 **Good sources for skills/commands:**
 
-- [JimmyTranDev/dotfiles](https://github.com/JimmyTranDev/dotfiles) — company-tuned
-  (same Jira/`BW` conventions).
+- [JimmyTranDev/dotfiles](https://github.com/JimmyTranDev/dotfiles) — a broad,
+  Jira-oriented set.
 - [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) — the MIT
   upstream lifecycle pack.
 - [anthropics/skills](https://github.com/anthropics/skills) and the built-in
-  skills that ship with storecode.
-- The `/plugin` marketplace (if enabled by company policy).
+  skills that ship with Claude Code.
+- The `/plugin` marketplace (if enabled by your policy).
 
 ---
 

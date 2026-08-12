@@ -38,7 +38,7 @@ after the colon — before the description, and after the optional scope:
 <type>[(scope)]: <TICKET> <description>
 ```
 
-For example: `feat: BW-10497 create credit card success page`.
+For example: `feat: PROJ-10497 create credit card success page`.
 
 Indicate a breaking change by appending `!` before the colon (`feat(api)!: ...`)
 and/or adding a `BREAKING CHANGE:` footer.
@@ -69,7 +69,7 @@ into separate commits when concerns are genuinely distinct.
 
 1. **Verify staged content.** Run `git diff --cached --name-only`. If empty, tell the user nothing is staged and stop — do **not** stage anything.
 2. **Read the staged diff.** Run `git diff --cached -- . ':!*.csv'`. Always exclude `*.csv` — those diffs are large, noisy, and unhelpful.
-3. **Extract the Jira ticket.** Run `git branch --show-current`. Match the branch against `[A-Z]+-[0-9]+` (e.g. `BW-10231`, `PROJ-456`). If found, place the key right after `: ` in the message. If not, use the standard format.
+3. **Extract the Jira ticket.** Run `git branch --show-current`. Match the branch against `[A-Z]+-[0-9]+` (e.g. `ABC-123`, `PROJ-456`). If found, place the key right after `: ` in the message. If not, use the standard format.
 4. **Decide type, scope, description.** Choose autonomously from the diff. No clarifying questions.
 5. **Commit only what is staged.** Run `git commit -m "<message>"`. Never use `git add` and never pass paths to `git commit`.
 6. **Report.** State the final message, short hash, and the files committed.

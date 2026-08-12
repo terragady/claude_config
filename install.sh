@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install this config into Claude Code (storecode) by symlinking the skills and
+# Install this config into Claude Code by symlinking the skills and
 # commands folders into ~/.claude, and making the helper scripts executable.
 #
 #   ./install.sh            # do it
@@ -49,7 +49,7 @@ run "chmod +x '$REPO'/scripts/ai/*.sh"
 
 say ""
 say "Done. Next steps:"
-say "  1. Restart storecode (or start a new session) so it picks up the new skills/commands."
+say "  1. Restart Claude Code (or start a new session) so it picks up the new skills/commands."
 say "  2. Type /  to see the new commands (/implement, /fix, /commit, /create-jira-ticket, /review-pr, /undraft-pr)."
 say "  3. For Jira: install acli (brew install atlassian/acli/acli) and run 'acli auth login'."
 say "  4. Read README.md for the full guide."

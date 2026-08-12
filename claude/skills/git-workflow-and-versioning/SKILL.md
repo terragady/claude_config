@@ -153,17 +153,17 @@ A branch created off `origin/develop` (or any remote-tracking branch) **inherits
 ```bash
 # Symptom: the upstream does not match the branch name
 git status -sb
-## BW-1234-new-feature...origin/develop [ahead 1]   ← wrong upstream
+## PROJ-1234-new-feature...origin/develop [ahead 1]   ← wrong upstream
 
 # Fix: publish the branch to its OWN remote and re-point the upstream in one step
-git push -u origin BW-1234-new-feature
+git push -u origin PROJ-1234-new-feature
 
 # Verify it now matches
 git status -sb
-## BW-1234-new-feature...origin/BW-1234-new-feature
+## PROJ-1234-new-feature...origin/PROJ-1234-new-feature
 ```
 
-This is non-destructive — it creates a new remote branch and never touches `develop`. To re-point an already-published branch instead, use `git branch --set-upstream-to=origin/BW-1234-new-feature`.
+This is non-destructive — it creates a new remote branch and never touches `develop`. To re-point an already-published branch instead, use `git branch --set-upstream-to=origin/PROJ-1234-new-feature`.
 
 ## Working with Worktrees
 
@@ -176,7 +176,7 @@ Git worktrees check out multiple branches at once, each in its own directory —
 ```bash
 git worktree add ../project-feature-a feature/task-creation          # existing branch
 git fetch origin
-git worktree add -b BW-1234-new-feature ../feature-b origin/develop  # new branch off an up-to-date base
+git worktree add -b PROJ-1234-new-feature ../feature-b origin/develop  # new branch off an up-to-date base
 git worktree remove ../project-feature-a                             # clean up after merge
 ```
 
