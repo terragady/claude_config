@@ -111,7 +111,11 @@ Run without further gates — implement every task to completion:
 
 1. Use `incremental-implementation` and `test-driven-development` and follow
    them. For framework/library specifics, ground decisions in official docs
-   (verify APIs before using them rather than guessing).
+   (verify APIs before using them rather than guessing). When a TypeScript type
+   won't resolve or a React pattern is genuinely non-trivial (complex generics,
+   cache/mutation shapes, hook/effect correctness), delegate a quick second
+   opinion to the `react-ts-consult` agent and apply its recommendation — don't
+   burn the main thread spinning on it.
 2. For each task: write the test, implement the smallest slice, run the
    project's tests/build/lint, and keep the tree green before moving on. Use a
    todo list to track task-by-task progress.
@@ -144,8 +148,10 @@ Don't proceed to review until the suite is green.
 
 Use `code-review-and-quality` and review the complete change across every axis
 (correctness, design, tests, security, readability) as if it were someone
-else's PR. Fix anything that wouldn't pass review, then **re-verify** (Phase 4)
-after the fixes.
+else's PR. For a TypeScript/React-heavy change, you may delegate a focused
+type-and-pattern correctness pass to the `react-ts-consult` agent alongside the
+general review. Fix anything that wouldn't pass review, then **re-verify**
+(Phase 4) after the fixes.
 
 ## Phase 6 — Report back to Jira (only when a Jira key was passed)
 

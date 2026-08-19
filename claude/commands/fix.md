@@ -22,7 +22,10 @@ Work the triage checklist in order; do not skip steps:
    bug and isn't a false positive.
 4. **Fix the root cause** — fix the underlying cause, not the symptom. Ask "why
    does this happen?" until you reach the actual cause. Touch only what the fix
-   requires; note — don't fix — unrelated issues you spot.
+   requires; note — don't fix — unrelated issues you spot. If the root cause is a
+   knotty TypeScript type or React behaviour (a type that won't narrow, an effect
+   re-running, a stale-closure or cache-shape bug), get a quick second opinion
+   from the `react-ts-consult` agent before settling on the fix.
 5. **Verify end-to-end** — the new regression test passes, the **full** suite
    passes, the build succeeds, and the original scenario works. If anything is
    still red, keep debugging the root cause; don't push past it.
