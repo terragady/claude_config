@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Install this config into Claude Code by symlinking the skills and
-# commands folders into ~/.claude, and making the helper scripts executable.
+# Install this config into Claude Code by symlinking the skills, commands and
+# agents folders plus CLAUDE.md into ~/.claude, and making the helper scripts
+# executable.
 #
 #   ./install.sh            # do it
 #   ./install.sh --dry-run  # just print what would happen
 #
-# Re-running is safe: it refreshes the symlinks. It never overwrites your
-# existing ~/.claude/CLAUDE.md or settings.json.
+# Re-running is safe: it refreshes the symlinks. Anything it would replace that
+# isn't already a symlink gets moved aside to a .backup.<pid> file first, so an
+# existing ~/.claude/CLAUDE.md is never lost. settings.json is left alone.
 
 set -euo pipefail
 
@@ -19,7 +21,7 @@ CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 say()  { printf '%s\n' "$*"; }
 run()  { if [ "$DRY_RUN" = 1 ]; then say "  [dry-run] $*"; else eval "$*"; fi; }
 
-link_dir() {
+link() {
   local src="$1" dest="$2"
   if [ -L "$dest" ]; then
     say "• $dest is a symlink → relinking"
@@ -40,8 +42,10 @@ say "Into Claude config dir: $CLAUDE_DIR"
 say ""
 
 run "mkdir -p '$CLAUDE_DIR'"
-link_dir "$REPO/claude/skills"   "$CLAUDE_DIR/skills"
-link_dir "$REPO/claude/commands" "$CLAUDE_DIR/commands"
+link "$REPO/claude/skills"    "$CLAUDE_DIR/skills"
+link "$REPO/claude/commands"  "$CLAUDE_DIR/commands"
+link "$REPO/claude/agents"    "$CLAUDE_DIR/agents"
+link "$REPO/claude/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
 
 say ""
 say "Making helper scripts executable…"

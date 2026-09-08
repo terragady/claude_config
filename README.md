@@ -30,7 +30,7 @@ so it's version-controlled and reproducible.
 ```bash
 cd ~/code/claude_config
 ./install.sh --dry-run     # see what it will do
-./install.sh               # symlink skills/ + commands/ into ~/.claude, chmod scripts
+./install.sh               # symlink skills/ commands/ agents/ CLAUDE.md into ~/.claude
 ```
 
 Then **restart Claude Code** (start a new session) and type `/` — you should see
@@ -49,7 +49,12 @@ acli auth login
 ## Background
 
 - **Your editable config lives in `~/.claude/`** — this is where `CLAUDE.md`,
-  `settings.json`, and (after install) `skills/` and `commands/` live.
+  `settings.json`, and (after install) `skills/`, `commands/` and `agents/` live.
+- Everything except `settings.json` is a symlink back into this repo, so editing
+  `~/.claude/CLAUDE.md` edits `claude/CLAUDE.md` here and shows up in `git diff`.
+  `settings.json` is deliberately left out: it's machine- and workplace-specific
+  (auth, model routing, hooks) and is often rewritten by the managed
+  distribution's own tooling.
 - Some workplaces ship Claude Code as a **managed distribution**: the same binary
   under the hood, wrapped in its own directory with a governance layer (an MCP
   allow/deny list, a policy engine). If that's your setup, the managed directory
