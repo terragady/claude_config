@@ -1,6 +1,6 @@
 ---
 name: create-jira-ticket
-description: Creates a well-formed Jira work item (ticket) end-to-end from the terminal — interactively gathers the project, type, summary, details, Figma designs, and any technical notes, assembles a short, plain-language description with acceptance criteria, confirms the draft, then creates it via the `acli` skill and reports the new key + browse URL. Descriptions are written for a mixed audience (PMs, designers, QA, developers) — concise and jargon-free, not an engineering spec. Use when asked to "create a Jira ticket", "create a Jira issue", "file a ticket", "open a work item", "raise a Jira task/story/bug/epic", or to turn an idea into a well-structured ticket. Triggers on "create jira ticket", "new jira ticket", "file a jira issue", "create work item", "raise a ticket". Delegates every raw `acli jira workitem` call to the `acli` skill and never WebFetches `*.atlassian.net`; for reading, searching, editing, transitioning, or commenting on existing tickets — or a single create with all fields already known — use the `acli` skill directly.
+description: Creates a well-formed Jira work item (ticket) end-to-end from the terminal — interactively gathers the project, type, summary, details, Figma designs, and any technical notes, assembles a short, plain-language description with acceptance criteria, confirms the draft, then creates it via the `acli` skill and reports the new key + browse URL. Descriptions are written for a mixed audience (PMs, designers, QA, developers) — concise and jargon-free, not an engineering spec. Use when asked to "create a Jira ticket", "create a Jira issue", "file a ticket", "open a work item", "raise a Jira task/story/bug/epic", or to turn an idea into a well-structured ticket. Delegates every raw `acli jira workitem` call to the `acli` skill and never WebFetches `*.atlassian.net`; for reading, editing, transitioning, or commenting on existing tickets — or a single create with all fields already known — use the `acli` skill directly.
 ---
 
 # Create Jira Ticket
@@ -50,14 +50,22 @@ tokens or auth output.
 The seed input (whatever idea or summary the caller passed in) seeds the summary.
 If it is empty, ask what the ticket is about before starting.
 
+## Asking the user
+
+Where this skill says **ask** or names a **confirm gate**, use the
+`AskUserQuestion` tool when it is available, with the listed options in the
+listed order (best first). On a host without that tool, ask the same question in
+plain text and wait for a real answer — never choose on the user's behalf, and
+never treat silence as approval.
+
 ## Workflow
 
 ### Phase 1 — Gather the inputs
 
 Collect the following **in order**. For any decision with discrete options, ask
-with the `question` tool (offer 3 concrete proposals, best first); for free-text
-fields (summary, details), ask a direct open question and draft a proposal the
-user can accept or edit. Never invent a project key or type — confirm them.
+with 3 concrete proposals (best first); for free-text fields (summary, details),
+ask a direct open question and draft a proposal the user can accept or edit.
+Never invent a project key or type — confirm them.
 
 1. **Project & type.** Establish the target **project key** and **work item
    type** (`Task`, `Story`, `Bug`, `Epic`). If the project is unknown, list the
@@ -102,7 +110,7 @@ user can accept or edit. Never invent a project key or type — confirm them.
    description, and any labels/assignee/parent.
 
 **Confirm gate (before creating).** Creating a ticket is an external side effect,
-so never auto-create. Use the `question` tool with exactly these three options:
+so never auto-create. Ask with exactly these three options:
 
 - **Create the ticket (Recommended)** — the draft is right; create it now.
 - **Edit the draft first** — adjust fields, then re-confirm.

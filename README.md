@@ -1,12 +1,14 @@
 # claude_config
 
-My personal configuration for **Claude Code**: a curated set of *skills*,
-*commands*, and *helper scripts*, adapted from
+My personal configuration for **Claude Code** and **GitHub Copilot CLI**: a
+curated set of *skills* and *helper scripts*, adapted from
 [JimmyTranDev/dotfiles](https://github.com/JimmyTranDev/dotfiles) and
 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills).
 
-Everything lives in this repo and is symlinked into `~/.claude` by `install.sh`,
-so it's version-controlled and reproducible.
+Everything lives in this repo and is symlinked into `~/.claude` (and `~/.copilot`
+if it exists) by `install.sh`, so it's version-controlled and reproducible.
+Workflows are written as **skills**, not slash commands, because `SKILL.md` is an
+open format both agents read — one file, two hosts.
 
 ---
 
@@ -14,7 +16,7 @@ so it's version-controlled and reproducible.
 
 - [Quick start](#quick-start)
 - [Background: where does config live?](#background)
-- [Skills vs commands vs subagents](#skills-vs-commands-vs-subagents)
+- [Skills vs subagents (and why no commands)](#skills-vs-subagents)
 - [How do I invoke them?](#how-do-i-invoke-them)
 - [The daily workflow: how to work a feature](#the-daily-workflow)
 - [Jira setup (and the "should I remove the Jira MCP?" question)](#jira-setup)
@@ -30,12 +32,13 @@ so it's version-controlled and reproducible.
 ```bash
 cd ~/code/claude_config
 ./install.sh --dry-run     # see what it will do
-./install.sh               # symlink skills/ commands/ agents/ CLAUDE.md into ~/.claude
+./install.sh               # symlink skills/ agents/ CLAUDE.md into ~/.claude (+ ~/.copilot)
 ```
 
 Then **restart Claude Code** (start a new session) and type `/` — you should see
 `/implement`, `/fix`, `/commit`, `/create-jira-ticket`, `/review-pr`,
-`/undraft-pr`.
+`/undraft-pr`. In Copilot CLI the same skills are there: `/skills list`, and
+`/skills reload` after you edit one.
 
 For Jira, also install the Atlassian CLI once:
 
@@ -50,6 +53,8 @@ acli auth login
 
 - **Your editable config lives in `~/.claude/`** — this is where `CLAUDE.md`,
   `settings.json`, and (after install) `skills/`, `commands/` and `agents/` live.
+  `commands/` is installed but empty: every workflow here is a skill instead
+  (see [below](#skills-vs-subagents)).
 - Everything except `settings.json` is a symlink back into this repo, so editing
   `~/.claude/CLAUDE.md` edits `claude/CLAUDE.md` here and shows up in `git diff`.
   `settings.json` is deliberately left out: it's machine- and workplace-specific
@@ -69,32 +74,49 @@ Config resolution order (highest wins): enterprise-managed → **personal
 
 ---
 
-## Skills vs commands vs subagents
+## Skills vs subagents
 
-Three different things. None is "better" — they solve different problems.
+Two different things. Neither is "better" — they solve different problems.
 
-| | **Skill** | **Command** | **Subagent** |
-|---|---|---|---|
-| What | Reusable knowledge / procedure | A `/slash` entry point | A separate worker with its own context window |
-| Lives in | `~/.claude/skills/<name>/SKILL.md` | `~/.claude/commands/<name>.md` | `~/.claude/agents/<name>.md` |
-| Runs | Inline, in your current conversation | Inline (usually just loads skills) | In an isolated context; returns only a summary |
-| Invoked | Auto (by description match) or `/name` | You type `/name` | Auto-delegated, or `@agent-name`, or `--agent` |
-| Best for | Checklists, conventions, workflows | A memorable trigger for a workflow | Big/noisy side-work, parallel work, tool restriction |
+| | **Skill** | **Subagent** |
+|---|---|---|
+| What | Reusable knowledge / procedure | A separate worker with its own context window |
+| Lives in | `~/.claude/skills/<name>/SKILL.md` | `~/.claude/agents/<name>.md` |
+| Runs | Inline, in your current conversation | In an isolated context; returns only a summary |
+| Invoked | Auto (by description match) or `/name` | Auto-delegated, or `@agent-name`, or `--agent` |
+| Best for | Checklists, conventions, workflows | Big/noisy side-work, parallel work, tool restriction |
+| Portable to Copilot CLI | **Yes** | No (Copilot has its own custom-agent format) |
 
-- A **command** is a *thin dispatcher* — e.g. `/commit` just says "use the
-  `commit` skill and follow it." The real logic is in the skill.
-- A **skill** is the *fat implementation* — the actual methodology, reused by many
-  commands and other skills.
-- A **subagent** is for work that would flood your context (search 100 files, run
-  the whole suite) or needs its own tool limits. This config ships **no custom
-  subagents** — the built-in ones (Explore, Plan, general-purpose) are enough to
-  start.
+A **subagent** is for work that would flood your context (search 100 files, run
+the whole suite) or needs its own tool limits. This config ships **no custom
+subagents** — the built-in ones (Explore, Plan, general-purpose) are enough to
+start.
 
-> **Why a separate `commands/` folder at all?** Historically Claude Code kept
-> commands and skills separate; they have since largely merged (a
-> `commands/deploy.md` and a `skills/deploy/SKILL.md` both create `/deploy`). We
-> keep them split because it mirrors the "entry point vs. logic" separation and
-> matches how Jimmy's upstream is organized.
+### Why there are no slash commands here
+
+Claude Code used to keep `commands/*.md` and `skills/<name>/SKILL.md` separate;
+they have since largely merged — both create a `/name` entry point. Skills win on
+two counts, so everything here is a skill and `claude/commands/` is empty:
+
+- **Portability.** Copilot CLI (and VS Code, and other hosts) read `SKILL.md` from
+  `~/.claude/skills`, `~/.copilot/skills`, `.github/skills`, or `.agents/skills`.
+  Nothing reads `~/.claude/commands`. A command is Claude-Code-only by
+  construction.
+- **Auto-triggering.** A skill's `description` lets the agent load it on its own
+  when your plain-language request matches. A command only ever fires when you
+  type it.
+
+Two things to keep in mind when writing one:
+
+- **Arguments.** `$ARGUMENTS` is a command-only substitution and is *not* expanded
+  in a `SKILL.md`. Write the input section in prose instead — "the PR is whatever
+  was passed with the invocation" — which works for both `/review-pr 123` and
+  *"review PR 123"*.
+- **Host-specific tools.** `AskUserQuestion` exists in Claude Code but not in
+  Copilot CLI. Name it with a fallback ("use `AskUserQuestion` when available,
+  otherwise ask in plain text") so the better UI is used where it exists and the
+  skill degrades cleanly where it doesn't. The interactive skills here all carry
+  an *Asking the user* section that says exactly this.
 
 ---
 
@@ -106,8 +128,9 @@ Three ways — mostly it's **automatic**:
    loads the matching one when your request fits. This is why descriptions are
    long and full of trigger phrases. Just say *"commit my changes"* and the
    `commit` skill kicks in.
-2. **Slash command.** Type `/commit`, `/implement PROJ-1234`, etc. Anything after
-   the command name becomes its `$ARGUMENTS`.
+2. **Slash.** Type `/commit`, `/implement PROJ-1234`, etc. Anything after the
+   name is passed through as the skill's input. In Copilot CLI, mention the skill
+   with a slash inside your prompt: *"use the /review-pr skill on 123"*.
 3. **Explicit.** Say *"use the commit skill"* to force it.
 
 Subagents auto-delegate, or you force one with `@agent-<name>`.
@@ -153,8 +176,8 @@ Smaller loops:
 - `/create-jira-ticket <idea>` — interactively build a well-formed ticket and
   create it via `acli`.
 
-You don't *have* to use commands — describing the task in plain language will
-auto-trigger the right skill. The commands are just reliable shortcuts.
+You don't *have* to type the slash — describing the task in plain language
+auto-triggers the right skill. The slash form is just a reliable shortcut.
 
 ---
 
@@ -194,13 +217,13 @@ MCP ever becomes available, you can still keep it off; the skill prefers `acli`.
 
 ## What's installed
 
-**Commands** (`claude/commands/`): `implement`, `fix`, `commit`,
-`create-jira-ticket`, `review-pr`, `undraft-pr`.
-
-**Skills** (`claude/skills/`), by lifecycle phase:
+**Skills** (`claude/skills/`), by lifecycle phase. The **workflow** row is the
+set you invoke directly (`/implement`, `/fix`, …); the rest are the methodology
+skills those load:
 
 | Phase | Skills |
 |---|---|
+| Workflow | `implement`, `fix`, `review-pr`, `undraft-pr`, `commit`, `create-jira-ticket` |
 | Meta | `using-agent-skills` (the router / operating rules) |
 | Define | `interview-me`, `idea-refine`, `spec-driven-development`, `create-jira-ticket` |
 | Plan | `planning-and-task-breakdown` |
@@ -255,7 +278,7 @@ Because `~/.claude/skills` is a symlink to this repo's `claude/skills`, new file
 are picked up on the next session — no re-install needed. Watch for references to
 skills you *haven't* installed and trim them (like we did here).
 
-**Good sources for skills/commands:**
+**Good sources for skills:**
 
 - [JimmyTranDev/dotfiles](https://github.com/JimmyTranDev/dotfiles) — a broad,
   Jira-oriented set.
@@ -271,6 +294,12 @@ skills you *haven't* installed and trim them (like we did here).
 
 **Can I reuse Jimmy's config?** Yes — his skills/commands are plain Markdown and
 drop-in compatible with Claude Code. This repo *is* a curated, cleaned reuse of it.
+
+**Do these work in GitHub Copilot CLI?** Yes — that's why they're skills rather
+than slash commands. Copilot CLI reads `~/.claude/skills` natively, and
+`install.sh` also links `~/.copilot/skills` to the same folder. Use `/skills list`
+to see them and `/skills reload` after editing one. Claude-Code-only bits
+(`AskUserQuestion`, subagents) are written with a plain-text fallback.
 
 **Can I reuse skills from elsewhere?** Yes — copy a `SKILL.md` into
 `claude/skills/<name>/`. No special format beyond `name` + `description`

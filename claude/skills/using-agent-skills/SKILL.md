@@ -24,6 +24,10 @@ skill:
 ```
 Task arrives
     │
+    ├── Take a feature/ticket all the way to a PR? → implement
+    ├── Something broken that needs root-causing? → fix
+    ├── Review an existing GitHub PR? ───────→ review-pr
+    ├── Mark a draft PR ready for review? ───→ undraft-pr
     ├── Don't know what you want yet? ──────→ interview-me
     ├── Have a rough concept, need variants? → idea-refine
     ├── New project / feature / change? ─────→ spec-driven-development
@@ -44,9 +48,12 @@ Task arrives
     └── Write a GitHub PR title / body? ─────→ github-pr-description
 ```
 
-The slash **commands** wire these together into workflows: `/implement` (drive a
-feature end-to-end), `/fix` (root-cause a bug), `/commit`, `/create-jira-ticket`,
-`/review-pr`, `/undraft-pr`.
+The first four are **workflow skills** — they wire the rest together and are the
+ones you normally invoke by name (`/implement`, `/fix`, `/review-pr`,
+`/undraft-pr`, plus `/commit` and `/create-jira-ticket`). Everything else is
+methodology they load. There are no slash commands in this config: every workflow
+is a skill so that Claude Code, Copilot CLI, and any other `SKILL.md` host read
+the same files.
 
 ## Core Operating Behaviors
 
@@ -148,11 +155,19 @@ verification passes. "Seems right" is never sufficient — there must be evidenc
    `code-review-and-quality` → `commit`.
 4. **When in doubt, start with a spec.** If the task is non-trivial and there's
    no spec, begin with `spec-driven-development` (or just run `/implement`).
+5. **Write skills host-agnostically.** `$ARGUMENTS` is not expanded in a
+   `SKILL.md` — describe the input in prose. Name a host-specific tool like
+   `AskUserQuestion` only with a plain-text fallback, so the skill still works in
+   Copilot CLI.
 
 ## Quick Reference (installed skills)
 
 | Phase | Skill | One-line summary |
 |-------|-------|-----------------|
+| Workflow | implement | Spec → plan → build → verify → review → branch + PR, with gates after spec and plan |
+| Workflow | fix | Reproduce → regression test → root-cause fix → full-suite verify |
+| Workflow | review-pr | Review a GitHub PR and post the approved findings as one batched review |
+| Workflow | undraft-pr | Gate and flip a draft PR to ready for review |
 | Define | interview-me | Surface what the user actually wants before any plan, spec, or code exists |
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |

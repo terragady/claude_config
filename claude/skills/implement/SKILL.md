@@ -1,21 +1,41 @@
 ---
-description: Run a feature or Jira ticket end-to-end on its own branch — spec, plan, build, verify, review, PR — with confirms after the spec and plan; always asks open questions instead of assuming
+name: implement
+description: Drives a feature or Jira ticket end-to-end on its own branch through five phases — spec, plan, build, verify, review — finishing with a pushed branch and an open PR, with confirm gates after the spec and after the plan. Optionally reads the ticket from Jira first and reports back to it at the end when a Jira key or browse URL is passed. Use when asked to "implement X", "build this feature", "work ticket ABC-123", or to take a task from idea to PR. Never assumes on an open question and never commits to the trunk. For fixing a bug use `fix`; for a spec or plan alone use `spec-driven-development` or `planning-and-task-breakdown`.
 ---
 
-Drive **$ARGUMENTS** from idea to merged-quality code in five phases: **spec →
-plan → build → verify → review**, on a **dedicated branch** cut from the trunk,
-finishing with a **pushed branch and an open PR**. Advance automatically, pausing
-for a go/no-go after the spec and after the plan — wrong assumptions caught there
-are the cheapest to fix.
-**Never assume when something is unclear: whenever an open question would change
-the spec, plan, or implementation, stop and ask it with the `question` tool
-(three concrete proposals, best first) before proceeding — do not silently pick
-an interpretation.**
+# Implement
 
-## Modifiers — parse `$ARGUMENTS` first
+## Overview
 
-Read the optional Jira modifier out of `$ARGUMENTS` before anything else;
-whatever remains is the task description.
+Takes a task from idea to merged-quality code in five phases — **spec → plan →
+build → verify → review** — on a **dedicated branch** cut from the trunk,
+finishing with a **pushed branch and an open PR**. Advances automatically,
+pausing for a go/no-go after the spec and after the plan: wrong assumptions
+caught there are the cheapest to fix.
+
+**Never assume when something is unclear.** Whenever an open question would
+change the spec, plan, or implementation, stop and ask it (three concrete
+proposals, best first) before proceeding — do not silently pick an
+interpretation.
+
+## When to Use
+
+- A feature, change, or Jira ticket needs to go from description to open PR.
+- The user wants the full disciplined pass (spec, tests, verification, review),
+  not a quick edit.
+
+**Do NOT use when:**
+
+- Fixing a bug or a failing test — use `fix`.
+- The user only wants a spec, a plan, or a one-line edit — use
+  `spec-driven-development`, `planning-and-task-breakdown`, or just do the edit.
+- Speed matters more than the full pass — use `fast-implementation`.
+
+## Input
+
+The task is whatever was passed with the invocation. Read the optional Jira
+modifier out of it before anything else; whatever remains is the task
+description.
 
 - **Jira key / URL** — a `^[A-Z]+-[0-9]+$` token or a
   `*.atlassian.net/browse/<KEY>` URL (take the key from the URL's last path
@@ -25,7 +45,17 @@ whatever remains is the task description.
 If, after stripping the modifier, there is no task description and no Jira key,
 ask what to implement before starting.
 
-## Phase 0 — Jira intake (only when a Jira key was passed)
+## Asking the user
+
+Where this skill says **ask** or names a **confirm gate**, use the
+`AskUserQuestion` tool when it is available, with the listed options in the
+listed order (best first). On a host without that tool, ask the same question in
+plain text and wait for a real answer — never choose on the user's behalf, and
+never treat silence as approval.
+
+## Workflow
+
+### Phase 0 — Jira intake (only when a Jira key was passed)
 
 1. **Read the ticket.** Use the `acli` skill, then:
    ```bash
@@ -42,14 +72,14 @@ ask what to implement before starting.
    Status names are workflow-specific — if `"In Progress"` is rejected, `view`
    the ticket, read its current status, and confirm the correct target name.
 3. **Pull the design (if any).** If the ticket references a Figma link
-   (`figma.com/design/...`) or node id **and** you have a `figma` skill
-   installed, use it to pull the design's structure, variables/tokens, and a code
-   draft for the relevant frame. No design link (or no figma skill) → skip.
+   (`figma.com/design/...`) or node id **and** a `figma` skill or MCP server is
+   available, use it to pull the design's structure, variables/tokens, and a code
+   draft for the relevant frame. No design link (or no figma tooling) → skip.
 
 Carry the acceptance criteria (and any design tokens/components) into the spec
 as concrete success criteria.
 
-## Phase 1 — Spec
+### Phase 1 — Spec
 
 1. Use the `spec-driven-development` skill and follow it.
 2. **Surface assumptions first** — list what you're inferring about scope, stack,
@@ -68,13 +98,12 @@ as concrete success criteria.
    never reaches the base branch or a PR.
 
 **Resolve open questions first.** If the spec still contains open questions or
-you are inferring anything that would change scope or behavior, ask them with the
-`question` tool (three concrete proposals each, best first) and fold the answers
-in before presenting the spec — never carry an unresolved assumption past this
-gate.
+you are inferring anything that would change scope or behavior, ask them (three
+concrete proposals each, best first) and fold the answers in before presenting
+the spec — never carry an unresolved assumption past this gate.
 
-**Confirm gate after the spec.** Present the spec + assumptions, then use the
-`question` tool with exactly these three options:
+**Confirm gate after the spec.** Present the spec + assumptions, then ask with
+exactly these three options:
 
 - **Proceed to planning (Recommended)** — the spec is right; continue.
 - **Revise the spec first** — adjust assumptions/scope, then re-confirm.
@@ -82,7 +111,7 @@ gate.
 
 Do not start planning until this gate returns "Proceed".
 
-## Phase 2 — Plan
+### Phase 2 — Plan
 
 1. Use the `planning-and-task-breakdown` skill and follow it.
 2. Break the spec into **ordered, dependency-aware tasks**, each sized S–M (no
@@ -94,11 +123,10 @@ Do not start planning until this gate returns "Proceed".
    step before the change lands.
 
 **Resolve open questions first.** If sequencing, scope, or approach still has an
-open question, ask it with the `question` tool before presenting the plan — do
-not guess.
+open question, ask it before presenting the plan — do not guess.
 
-**Confirm gate after the plan.** Present the task list, then use the `question`
-tool with exactly these three options:
+**Confirm gate after the plan.** Present the task list, then ask with exactly
+these three options:
 
 - **Proceed to build (Recommended)** — the plan is right; start implementing.
 - **Revise the plan first** — re-slice/re-order, then re-confirm.
@@ -106,7 +134,7 @@ tool with exactly these three options:
 
 Do not write implementation code until this gate returns "Proceed".
 
-## Phase 2.5 — Branch
+### Phase 2.5 — Branch
 
 Only once the plan gate returns "Proceed" — a run that stops at the spec or plan
 must not leave a stray branch behind. **Never commit directly to the trunk**
@@ -119,7 +147,7 @@ must not leave a stray branch behind. **Never commit directly to the trunk**
    - **On the trunk** → pull first (`git pull --ff-only`), then branch from it. No
      question needed.
    - **Not on the trunk** → the current branch is someone's unmerged work, so ask
-     with the `question` tool before touching anything:
+     before touching anything:
      - **Branch off the trunk (Recommended)** — an independent branch and PR
        targeting the trunk. Default: independent work gets an independent review,
        and nothing has to be rebased if the other branch is reworked.
@@ -138,7 +166,7 @@ must not leave a stray branch behind. **Never commit directly to the trunk**
 
 Record the chosen **base branch** — Phase 6 targets the PR at it.
 
-## Phase 3 — Build (autonomous)
+### Phase 3 — Build (autonomous)
 
 Run without further gates — implement every task to completion:
 
@@ -146,12 +174,12 @@ Run without further gates — implement every task to completion:
    them. For framework/library specifics, ground decisions in official docs
    (verify APIs before using them rather than guessing). When a TypeScript type
    won't resolve or a React pattern is genuinely non-trivial (complex generics,
-   cache/mutation shapes, hook/effect correctness), delegate a quick second
-   opinion to the `react-ts-consult` agent and apply its recommendation — don't
-   burn the main thread spinning on it.
+   cache/mutation shapes, hook/effect correctness) and a `react-ts-consult` agent
+   is available, delegate a quick second opinion and apply its recommendation —
+   don't burn the main thread spinning on it.
 2. For each task: write the test, implement the smallest slice, run the
-   project's tests/build/lint, and keep the tree green before moving on. Use a
-   todo list to track task-by-task progress.
+   project's tests/build/lint, and keep the tree green before moving on. Track
+   task-by-task progress in a todo list.
 3. Touch only what the task requires (scope discipline). Note — don't fix —
    unrelated issues you spot.
 
@@ -160,7 +188,7 @@ that wasn't settled earlier, or an **irreversible / destructive action**
 (deleting data, force-push, prod deploy, schema drops, anything moving money or
 sending external comms). Otherwise keep going.
 
-## Phase 4 — Verify
+### Phase 4 — Verify
 
 With all tasks built, verify the change as a whole (not just the slices you
 touched):
@@ -177,16 +205,16 @@ touched):
 
 Don't proceed to review until the suite is green.
 
-## Phase 5 — Review
+### Phase 5 — Review
 
 Use `code-review-and-quality` and review the complete change across every axis
 (correctness, design, tests, security, readability) as if it were someone
-else's PR. For a TypeScript/React-heavy change, you may delegate a focused
+else's PR. For a TypeScript/React-heavy change you may delegate a focused
 type-and-pattern correctness pass to the `react-ts-consult` agent alongside the
 general review. Fix anything that wouldn't pass review, then **re-verify**
 (Phase 4) after the fixes.
 
-## Phase 6 — Commit, push, PR
+### Phase 6 — Commit, push, PR
 
 Only with Phase 4 green and Phase 5's findings resolved.
 
@@ -210,9 +238,9 @@ Only with Phase 4 green and Phase 5's findings resolved.
    repo's PR template if one exists.
 6. **Report the PR URL.**
 
-If the human has asked for no PR, stop after the commit and say so.
+If the user has asked for no PR, stop after the commit and say so.
 
-## Phase 7 — Report back to Jira (only when a Jira key was passed)
+### Phase 7 — Report back to Jira (only when a Jira key was passed)
 
 When the work is complete, verified, and the PR is open:
 
@@ -221,11 +249,46 @@ When the work is complete, verified, and the PR is open:
    ```bash
    acli jira workitem comment create --key <KEY> --body "<summary of work, PR link, verification>"
    ```
-2. Propose the next transition (e.g. `"In Review"` or `"Done"`) and run it after
-   confirming the exact status name from the project's workflow:
+2. Move the ticket to the review/QA column. Default to **`"QA Development"`** —
+   that is the target status in the projects this config is used with. Status
+   names are workflow-specific, so if it is rejected, `view` the ticket, read the
+   available transitions, and use the exact name from that project's workflow
+   (commonly `"In Review"`):
    ```bash
-   acli jira workitem transition --key <KEY> --status "In Review" --yes
+   acli jira workitem transition --key <KEY> --status "QA Development" --yes
    ```
+
+## Rules
+
+- Never assume past an open question — ask, with concrete proposals.
+- Never start planning before the spec gate, or coding before the plan gate.
+- Never commit to the trunk; every run that builds gets its own branch.
+- Never `git add -A` / `.`; stage explicit paths.
+- Never `--no-verify`.
+- Never leave the `spec/` artifacts in the commit.
+- Report honestly: pre-existing failures are named as pre-existing, with
+  evidence, not folded into the change's results.
+
+## Red Flags
+
+- A branch created before the plan gate returned "Proceed".
+- Implementation code written while the spec still lists an open question.
+- `git add -A`, `git commit --no-verify`, or a commit on `develop`/`main`.
+- `spec/` files showing up in `git status` at commit time.
+- A "green" report where the full suite was never run.
+- A PR description that reads like a file-by-file changelog.
+
+## Verification
+
+- [ ] Spec saved to `spec/<task-slug>/spec.md` and its gate returned "Proceed".
+- [ ] Plan saved to `spec/<task-slug>/plan.md` and its gate returned "Proceed".
+- [ ] Work happened on a dedicated branch, never on the trunk.
+- [ ] Every planned task built, with tests written first.
+- [ ] Full suite, build, lint, and type-check all green.
+- [ ] Review pass done and its findings resolved, then re-verified.
+- [ ] `spec/` cleared before the commit; only explicit paths staged.
+- [ ] Branch pushed, PR opened against the recorded base, URL reported.
+- [ ] For a Jira key: ticket commented and transitioned.
 
 ## Done
 
