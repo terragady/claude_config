@@ -98,8 +98,8 @@ acli jira workitem create --project ABC --type Story --summary "..." --parent AB
 | `-p, --project <key>` | Project key (required) |
 | `-t, --type <type>` | Work item type: `Epic`, `Story`, `Task`, `Bug`, ... (required) |
 | `-s, --summary <text>` | Summary |
-| `-d, --description <text>` | Description (plain text or ADF) |
-| `--description-file <path>` | Read description from a file |
+| `-d, --description <text>` | Description — **plain text or ADF only, never Markdown** |
+| `--description-file <path>` | Read the description from a file (plain text or ADF JSON) |
 | `-a, --assignee <ref>` | Email, account id, `@me`, or `default` |
 | `-l, --label <a,b>` | Labels (comma-separated) |
 | `--parent <key>` | Parent work item |
@@ -113,11 +113,42 @@ acli jira workitem create --project ABC --type Story --summary "..." --parent AB
 acli jira workitem edit --key ABC-123 --summary "Updated summary" --yes
 acli jira workitem edit --key ABC-123 --assignee "user@example.com" --yes
 acli jira workitem edit --key ABC-123 --labels "ready,backend" --yes
-acli jira workitem edit --key "ABC-1,ABC-2" --description-file notes.md --yes
+acli jira workitem edit --key "ABC-1,ABC-2" --description-file description.adf.json --yes
 ```
 
 `-y, --yes` skips the confirmation prompt. Multiple keys are comma-separated.
-Supports `--remove-assignee` and `--remove-labels <list>`.
+Supports `--remove-assignee` and `--remove-labels <list>`. There is no
+`--priority` flag, and `edit` rejects `additionalAttributes` — priority can only
+be set at creation via `--from-json`.
+
+### Rich text — ADF, not Markdown
+
+Every text field (`--description`, `--description-file`, `--body`,
+`--body-file`) takes **plain text or Atlassian Document Format**. Markdown is not
+a supported input: `acli` drops the whole string into a single ADF paragraph, so
+the ticket renders literal `## Heading`, `- item`, and `**bold**`. Jira **wiki
+markup** (`h3.`, `{{mono}}`, `{code}`) renders literally too. For anything with
+structure, write an ADF document to a file and pass the `*-file` flag:
+
+```json
+{ "type": "doc", "version": 1, "content": [
+  { "type": "heading", "attrs": { "level": 3 },
+    "content": [{ "type": "text", "text": "Summary" }] },
+  { "type": "paragraph", "content": [
+    { "type": "text", "text": "Fixed in " },
+    { "type": "text", "text": "getCreditCard", "marks": [{ "type": "code" }] }
+  ] }
+] }
+```
+
+`heading`, `paragraph`, `bulletList`/`listItem`, `codeBlock` and the `code` /
+`strong` / `link` marks all work. `The field value is not valid Atlassian
+Document Format (ADF) content` is generic and never names the offending node —
+the usual cause is a `text` node whose `text` is empty or an object (a
+double-wrapped `{"text": {"text": ...}}`). Validate with `jq .` first. A rejected
+`create` is a no-op, so fix and retry rather than filing a probe ticket.
+
+One-line prose needs none of this — `--body "Shipped in PR #42."` is fine.
 
 ### Assign
 
@@ -142,16 +173,26 @@ Status **names are workflow-specific** (e.g. `In Progress`, `In Review`,
 status and confirm the exact target name from the project's workflow before
 retrying. `-y, --yes` confirms without prompting.
 
+**Transitions cannot skip states**, and there is no flag that lists the allowed
+ones — a bad target just yields `No allowed transitions found for given status`,
+which reads the same whether the name is wrong or merely out of reach. Walk the
+workflow **one hop at a time** from the ticket's current status. In **BW** the
+chain is `Received` → `Prioritised Issues Development` → `In Progress
+Development` → `QA Development` → `Testable` → `Release` → `Closed` (British
+*s*), so plain `"In Progress"` never works there.
+
 ### Comment
 
 ```bash
 acli jira workitem comment create --key ABC-123 --body "Implemented behind a flag; PR #42."
-acli jira workitem comment create --key ABC-123 --body-file summary.md --json
+acli jira workitem comment create --key ABC-123 --body-file summary.adf.json --json
 acli jira workitem comment create --key ABC-123 --edit-last --body "Updated note"
 acli jira workitem comment list --key ABC-123 --json
 ```
 
 `comment` subcommands: `create`, `list`, `update`, `delete`, `visibility`.
+`--body`/`--body-file` follow the same rule as descriptions — plain text or ADF,
+never Markdown (see **Rich text — ADF, not Markdown** above).
 
 ### Other work item subcommands
 

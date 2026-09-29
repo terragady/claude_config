@@ -29,7 +29,6 @@ interpretation.
 - Fixing a bug or a failing test — use `fix`.
 - The user only wants a spec, a plan, or a one-line edit — use
   `spec-driven-development`, `planning-and-task-breakdown`, or just do the edit.
-- Speed matters more than the full pass — use `fast-implementation`.
 
 ## Input
 
@@ -69,8 +68,10 @@ never treat silence as approval.
    acli jira workitem assign --key <KEY> --assignee "@me" --yes
    acli jira workitem transition --key <KEY> --status "In Progress" --yes
    ```
-   Status names are workflow-specific — if `"In Progress"` is rejected, `view`
-   the ticket, read its current status, and confirm the correct target name.
+   Status names are workflow-specific and transitions **cannot skip states** —
+   if `"In Progress"` is rejected, `view` the ticket, read its current status,
+   and walk the workflow one hop at a time. In **BW** that means
+   `Received` → `Prioritised Issues Development` → `In Progress Development`.
 3. **Pull the design (if any).** If the ticket references a Figma link
    (`figma.com/design/...`) or node id **and** a `figma` skill or MCP server is
    available, use it to pull the design's structure, variables/tokens, and a code
@@ -249,11 +250,15 @@ When the work is complete, verified, and the PR is open:
    ```bash
    acli jira workitem comment create --key <KEY> --body "<summary of work, PR link, verification>"
    ```
+   Keep it to plain prose — `--body` takes plain text or ADF, **not Markdown**,
+   so `##` and `**bold**` render literally. If the summary needs headings or
+   bullets, write an ADF document to a file and pass `--body-file` (see the
+   `acli` skill).
 2. Move the ticket to the review/QA column. Default to **`"QA Development"`** —
    that is the target status in the projects this config is used with. Status
-   names are workflow-specific, so if it is rejected, `view` the ticket, read the
-   available transitions, and use the exact name from that project's workflow
-   (commonly `"In Review"`):
+   names are workflow-specific and transitions cannot skip states, so if it is
+   rejected, `view` the ticket, read its current status, and step one hop at a
+   time toward the target (commonly `"In Review"` elsewhere):
    ```bash
    acli jira workitem transition --key <KEY> --status "QA Development" --yes
    ```

@@ -93,8 +93,15 @@ Never invent a project key or type — confirm them.
    specific, observable outcomes that define "done" — phrased as what the user
    sees or can do, not internal implementation checks. Propose a draft for the
    user to adjust; keep each item to one line.
-7. **Optional metadata.** Offer to set labels, an assignee (`@me` or someone
-   else), and a parent epic (`--parent <KEY>`). Skip any the user declines.
+7. **Metadata.** Always set a **parent epic** (`--parent <KEY>`) — without one
+   the ticket sits loose in the project instead of hanging off the epic its
+   siblings belong to. If the right epic isn't obvious, read a sibling's
+   (`acli jira workitem view <KEY> --fields parent --json`) or ask; only omit it
+   when the user confirms the ticket genuinely has no parent. Then offer labels,
+   an assignee (`@me` or someone else), and **priority** — note that `acli` can
+   only set priority at **creation** time, via `--from-json` with
+   `"additionalAttributes": {"priority": {"name": "High"}}`; `edit` has no
+   `--priority` flag, so otherwise the user must bump it by hand in the UI.
 
 ### Phase 2 — Assemble & confirm the draft
 
@@ -103,11 +110,56 @@ Never invent a project key or type — confirm them.
    omit **Technical notes** for most tickets — see step 5). Keep the whole
    description short: prefer a few tight sentences or bullets per section over
    exhaustive prose, and write it so a non-engineer could read it end to end
-   without getting lost. Write it to a temporary file (e.g. a heredoc to a
-   `mktemp` path) so the multi-line, structured content survives shell
-   quoting, and pass that path via `--description-file`.
-2. Show the full draft back to the user — project, type, summary, the rendered
-   description, and any labels/assignee/parent.
+   without getting lost.
+2. **Write it as ADF JSON** (see below) to a `mktemp` path and pass that via
+   `--description-file` — never inline `--description`, where multi-line content
+   breaks under shell quoting.
+3. Show the full draft back to the user — project, type, summary, the
+   description as it will read, and any labels/assignee/parent.
+
+#### Description format — ADF, not Markdown
+
+`acli` takes **plain text or Atlassian Document Format**, never Markdown. Hand
+it Markdown and it wraps the whole string in one ADF paragraph, so the ticket
+renders literal `## Details`, `- item`, and `**bold**`. Build the document
+instead:
+
+```json
+{
+  "type": "doc",
+  "version": 1,
+  "content": [
+    { "type": "heading", "attrs": { "level": 3 },
+      "content": [{ "type": "text", "text": "Details" }] },
+    { "type": "paragraph",
+      "content": [
+        { "type": "text", "text": "The advisor cannot see the granted limit on " },
+        { "type": "text", "text": "getCreditCard", "marks": [{ "type": "code" }] },
+        { "type": "text", "text": "." }
+      ] },
+    { "type": "heading", "attrs": { "level": 3 },
+      "content": [{ "type": "text", "text": "Acceptance criteria" }] },
+    { "type": "bulletList", "content": [
+      { "type": "listItem", "content": [
+        { "type": "paragraph",
+          "content": [{ "type": "text", "text": "The limit shows on the detail page." }] }
+      ] }
+    ] }
+  ]
+}
+```
+
+`heading`, `paragraph`, `bulletList`/`listItem`, `codeBlock`, and the `code` /
+`strong` / `link` marks all work. Two things to get right before running the
+create:
+
+- **Every `text` node needs a non-empty string `text` field.** A nested
+  `{"text": {"text": ...}}` (from double-wrapping a helper) is the usual cause of
+  `The field value is not valid Atlassian Document Format (ADF) content` — a
+  generic error that never names the bad node. Validate locally first
+  (`jq . <file>`, and eyeball that no `text` value is an object or `""`).
+- A failed `create` is a **no-op**, so retrying after a fix is safe. Never create
+  a throwaway "probe" ticket to test formatting.
 
 **Confirm gate (before creating).** Creating a ticket is an external side effect,
 so never auto-create. Ask with exactly these three options:
@@ -129,13 +181,20 @@ Do not run the create command until this gate returns "Create".
    Parse the JSON for the new key.
 2. Report the created **key** and its **browse URL**
    (`https://<site>.atlassian.net/browse/<KEY>`).
-3. Offer to pick it up now — self-assign and move to *In Progress*:
+3. Offer to pick it up now — self-assign and move it into progress:
    ```bash
    acli jira workitem assign --key <KEY> --assignee "@me" --yes
    acli jira workitem transition --key <KEY> --status "In Progress" --yes
    ```
-   Status names are workflow-specific; if `"In Progress"` is rejected, `view` the
-   ticket and use the exact name from its workflow. Skip if the user declines.
+   Skip if the user declines. Two workflow facts to expect:
+   - **Status names are project-specific.** In **BW** the chain is
+     `Received` → `Prioritised Issues Development` → `In Progress Development`
+     → `QA Development` → `Testable` → `Release` → `Closed` (note the British
+     *s*), so `"In Progress"` is rejected there.
+   - **`acli` cannot skip statuses**, and has no flag to list the allowed ones —
+     it only reports `No allowed transitions found for given status`. Walk the
+     chain **one hop at a time** from the ticket's current status; if a hop is
+     rejected, `view` the ticket to read where it actually is.
 
 ## Rules
 
@@ -143,8 +202,11 @@ Do not run the create command until this gate returns "Create".
   WebFetch an `*.atlassian.net` URL.
 - Never invent a project key or work item type — confirm both with the user.
 - Never auto-create: pass the confirm gate before running the create command.
-- Write the multi-line description to a temp file and pass `--description-file`
-  so structured content survives shell quoting.
+- Always set `--parent` unless the user confirms the ticket has no epic.
+- Write the description as **ADF JSON** to a temp file and pass
+  `--description-file`. Never Markdown, never a multi-line inline
+  `--description`.
+- Decide priority at creation time (`--from-json`); it cannot be set afterwards.
 - Omit empty sections (Figma / Technical notes) from the assembled description.
 - Write in plain, concise language for a mixed audience — include technical
   detail only where a section calls for it (see step 5), and only as much as
@@ -157,6 +219,9 @@ Do not run the create command until this gate returns "Create".
 |---|---|
 | "I know the project/type, I'll skip confirming." | Never invent a project key or type — a wrong one files the ticket in the wrong place. Confirm both. |
 | "I'll pass the description inline with `--description`." | Multi-line structured content breaks under shell quoting. Write it to a temp file and use `--description-file`. |
+| "Markdown headings and bullets will render fine." | `acli` accepts plain text or ADF only. Markdown arrives as one paragraph of literal `##` and `**`. Build the ADF document. |
+| "The ADF error will tell me which node is wrong." | It won't — it's generic. Validate the JSON locally and check every `text` node holds a non-empty string. |
+| "I'll file a quick test ticket to check the formatting." | A failed create is a no-op, so just fix and retry. Never create probe tickets. |
 | "The draft looks right, I'll just create it." | Creating a ticket is an external side effect. Pass the confirm gate first. |
 | "I'll WebFetch the atlassian.net URL to check the result." | Those URLs return a JS shell with no data. Use the `acli` skill for every read. |
 | "I'll reimplement the `acli` flags here." | The CLI surface lives in the `acli` skill. Delegate to it instead of duplicating. |
@@ -169,6 +234,9 @@ Do not run the create command until this gate returns "Create".
 - WebFetching an `*.atlassian.net` URL instead of using the `acli` skill.
 - Inventing a project key or work item type instead of confirming it.
 - Passing a multi-line `--description` inline instead of `--description-file`.
+- A description file containing Markdown (`##`, `-`, `**`) instead of an ADF doc.
+- Creating without `--parent` because the epic wasn't obvious.
+- Retrying a rejected transition with a *later* status instead of the next hop.
 - Printing secrets or sign-in output.
 - A description full of endpoint/schema detail, jargon, or implementation
   minutiae for a ticket that isn't backend/API work.
@@ -179,7 +247,8 @@ Do not run the create command until this gate returns "Create".
 
 - [ ] The `acli` skill was loaded and every Jira read/write went through it.
 - [ ] Project key and work item type were confirmed with the user (not invented).
-- [ ] The description was assembled from only non-empty sections and passed via `--description-file`.
+- [ ] The description was assembled from only non-empty sections, written as valid ADF JSON, and passed via `--description-file`.
+- [ ] `--parent` was set (or the user confirmed the ticket has no epic), and priority was settled at creation time.
 - [ ] The description is short and plain-language — a non-engineer could read it and understand the ticket.
 - [ ] Technical notes were included only where the work genuinely called for them, and kept brief.
 - [ ] The confirm gate returned "Create" before the create command ran.
