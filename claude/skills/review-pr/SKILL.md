@@ -107,16 +107,22 @@ Use the `code-review-and-quality` skill and run its full process on the change:
 4. **Gated-offer to post it** (submitting notifies the author). Ask with three
    options:
    - **Submit the batched review (Recommended)** — deliver every queued comment +
-     summary as a single review. Build the payload with `jq` so every body is
-     escaped safely (findings can quote untrusted diff text), then POST once:
+     summary as a single review. Build the payload with `jq` and quoted shell
+     variables so every body is escaped safely (findings can quote untrusted
+     diff text). `--input -` selects the request method automatically; do not
+     specify an explicit POST method flag:
      ```bash
      jq -n \
-       --arg body "<summary>" \
-       --arg c1 "<finding>" --argjson l1 <n> \
+       --arg body "$review_body" \
+       --arg path "$comment_path" \
+       --arg c1 "$comment_body" --argjson l1 "$comment_line" \
        '{event:"COMMENT", body:$body,
-         comments:[{path:"<file>", line:$l1, side:"RIGHT", body:$c1}]}' |
-       gh api --method POST /repos/<org>/<repo>/pulls/<number>/reviews --input -
+         comments:[{path:$path, line:$l1, side:"RIGHT", body:$c1}]}' |
+       gh api "/repos/<org>/<repo>/pulls/<number>/reviews" --input -
      ```
+     Use the approved verdict's event and include every approved inline comment
+     in the JSON array. Do not replace this array with mixed `-f` / `-F` fields:
+     `gh` processes those flag groups separately and can split comment objects.
    - **Post the summary only** — `gh pr review <PR> --comment` (or
      `--request-changes`): lighter-weight, no line anchors.
    - **Don't post** — keep the review in-session only.
@@ -129,8 +135,10 @@ Use the `code-review-and-quality` skill and run its full process on the change:
   notifies the author.
 - Only offer an inline comment for a finding that anchors to a line in the PR
   diff; everything else is summary-only.
-- Build review bodies with `jq`, not string interpolation — findings quote
-  untrusted diff text.
+- Build review bodies with `jq` and quoted variables, not interpolation into
+  shell source — findings quote untrusted diff text.
+- Let `gh api` infer the request method from fields or JSON input; never specify
+  an explicit POST method flag.
 - Read whole files, not just hunks, before judging a change.
 
 ## Red Flags
