@@ -59,11 +59,11 @@ fi
 
 say ""
 say "Making helper scripts executable…"
-run "chmod +x '$REPO'/scripts/ai/*.sh"
+run "chmod +x '$REPO'/scripts/*.sh"
 
 say ""
 say "Done. Next steps:"
 say "  1. Restart Claude Code (or start a new session) so it picks up the new skills."
-say "  2. Type /  to see them (/implement, /fix, /commit, /create-jira-ticket, /review-pr, /undraft-pr)."
+say "  2. Type /  to see them (/implement, /review-pr, /address-review, /fix, /commit, ...)."
 say "  3. For Jira: install acli (brew install atlassian/acli/acli) and run 'acli auth login'."
 say "  4. Read README.md for the full guide."
