@@ -2,7 +2,7 @@
 name: doc-lookup
 description: Fetches and summarises documentation, pricing, API references, or any external web page. Use for "look up X in the docs", pricing/limits questions, or reading an official reference — anything that needs the web but not the repo. Returns a concise, sourced answer.
 tools: Read, WebFetch, WebSearch
-model: claude-sonnet-5
+model: sonnet
 ---
 
 You look things up and report back concisely. Given a question and some source
