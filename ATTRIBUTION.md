@@ -7,22 +7,27 @@ is wholly original; the value is in the selection, trimming, and wiring together
 
 ### [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) — MIT
 
-The lifecycle skill pack (`spec-driven-development`, `planning-and-task-breakdown`,
-`incremental-implementation`, `test-driven-development`, `code-review-and-quality`,
-`code-simplification`, `security-and-hardening`, `debugging-and-error-recovery`,
-`context-engineering`, `git-workflow-and-versioning`, and others) derives from this
-repo. Licensed MIT; the MIT notice is reproduced below.
+An earlier version of this repo carried its lifecycle skill pack. What remains is
+the severity labels and review order in `code-review-and-quality`, plus the
+test-first and root-cause steps folded into `implement` and `fix`. Licensed MIT;
+the MIT notice is reproduced below.
 
 ### [JimmyTranDev/dotfiles](https://github.com/JimmyTranDev/dotfiles) — no license stated
 
-The command/skill split, the `acli` Jira workflow, and several commands
-(`implement`, `fix`, `commit`, `create-jira-ticket`, `review-pr`, `undraft-pr`)
-were adapted from this repo.
+The command/skill split, the `acli` Jira workflow, and the first versions of
+`implement`, `fix`, `commit`, `create-jira-ticket` and `review-pr` were adapted
+from this repo.
 
 > **Note:** at the time of writing, this upstream publishes **no LICENSE file**, so
 > no license is granted for reuse. The material here has been substantially
 > rewritten and genericized, but if you are the author and would like any of it
 > changed or removed, please open an issue and I will do so promptly.
+
+### [mattpocock/skills](https://github.com/mattpocock/skills)
+
+`grilling` is my own wording of the idea behind his `grilling` / `grill-me`
+skills: a decision tree, questions asked in rounds with a recommended answer,
+and facts looked up rather than asked.
 
 ### [anthropics/skills](https://github.com/anthropics/skills)
 
@@ -56,6 +61,6 @@ SOFTWARE.
 
 ## This repo
 
-Original wording and the `scripts/ai/` helper library are published under the same
+Original wording and the scripts are published under the same
 MIT terms. This is a personal configuration shared as-is, with no warranty and no
 affiliation with or endorsement by any employer.
