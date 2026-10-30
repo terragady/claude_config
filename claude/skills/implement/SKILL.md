@@ -39,18 +39,27 @@ Use the `acli` skill:
    change can reuse.
 2. Use the `grilling` skill to settle every open decision. Don't carry an
    assumption past this phase.
-3. Write a short spec: objective, success criteria, scope (in and out), what
-   gets reused, and the decisions made. A small change gets a few lines.
-4. Save it to `spec/<slug>/spec.md`. The slug is the Jira key, or else a short
+3. If there is more than one sensible way to build it, show 2–3 approaches
+   with their tradeoffs and recommend one, and let the user pick. If there is
+   only one sensible way, say why the others don't fit.
+4. Write a short spec: objective, success criteria, scope (in and out), the
+   chosen approach, what gets reused, and the decisions made. A small change
+   gets a few lines.
+5. Save it to `spec/<slug>/spec.md`. The slug is the Jira key, or else a short
    kebab-case name. This file is a throwaway and is never committed.
-5. **Gate:** Proceed to planning (Recommended) / Revise the spec / Stop here.
+6. **Gate:** Proceed to planning (Recommended) / Revise the spec / Stop here.
 
 ## Phase 2: Plan
 
 1. Write ordered tasks as vertical slices, each touching about 5 files or
    fewer. Give each task an acceptance check and the command that verifies it.
-2. Save the plan to `spec/<slug>/plan.md`.
-3. **Gate:** Proceed to build (Recommended) / Revise the plan / Stop here.
+   Name the functions, components, and types each task adds or uses, so the
+   names match across tasks.
+2. List the edge cases the spec implies but no test covers yet, and add the
+   test for each one to the task that owns the code.
+3. Check the plan against the spec: every success criterion maps to a task.
+4. Save the plan to `spec/<slug>/plan.md`.
+5. **Gate:** Proceed to build (Recommended) / Revise the plan / Stop here.
 
 ## Phase 3: Branch
 
@@ -71,6 +80,7 @@ Work without gates. For each task:
 
 1. Write a failing test for the behavior. Go through public interfaces, follow
    the existing test patterns, and prefer real implementations over mocks.
+   Run it and see it fail for the reason you expect.
 2. Make the smallest change that passes it.
 3. Run the tests, lint, and types for the area you touched. Track progress in
    the todo list.
@@ -78,7 +88,9 @@ Work without gates. For each task:
 Touch only what the plan names, and note unrelated issues instead of fixing
 them. Check library APIs against their docs (`doc-lookup` agent) instead of
 guessing. For a knotty TypeScript or React problem, ask the `react-ts-consult`
-agent. Stop only for a blocking ambiguity or an irreversible action.
+agent. Stop only for a blocking ambiguity or an irreversible action. For any
+other choice the spec and plan don't settle, decide it yourself and note what
+you chose, why, and what it costs if wrong.
 
 ## Phase 5: Verify and review
 
@@ -112,7 +124,8 @@ agent. Stop only for a blocking ambiguity or an irreversible action.
 Keep it short:
 
 - what changed, and the decisions made at the gates
-- verification results
+- the calls you made yourself during the build
+- verification results, each with the command you ran
 - review findings and what was fixed
 - issues noted but not touched
 - branch, base, and PR URL

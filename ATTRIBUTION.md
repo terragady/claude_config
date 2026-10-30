@@ -29,6 +29,14 @@ from this repo.
 skills: a decision tree, questions asked in rounds with a recommended answer,
 and facts looked up rather than asked.
 
+### [obra/superpowers](https://github.com/obra/superpowers) — MIT
+
+Four ideas in `implement` are my own wording of steps from its `brainstorming`,
+`writing-plans`, `test-driven-development` and `subagent-driven-development`
+skills: laying out approaches before the spec, a plan that names its interfaces
+and the edge cases its tests must cover, watching each new test fail, and
+logging the calls made without asking. No text was copied.
+
 ### [anthropics/skills](https://github.com/anthropics/skills)
 
 Referenced as a source of further skills; consult that repo for its own terms.
