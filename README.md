@@ -12,6 +12,18 @@ live config.
 
 `settings.json` is left alone. It's machine-specific and managed elsewhere.
 
+For Copilot CLI it also links `copilot/`, which makes Copilot behave like my
+Claude Code setup:
+
+- `statusline.sh`: the same statusline as Claude (AI credits instead of cost).
+- `scripts/guard.sh`: Claude's deny/ask rules (secret files, shell startup
+  files, `sudo`/`crontab`/`launchctl`) as a hook, since Copilot's user settings
+  can't hold deny rules.
+- `scripts/claude-memory.sh`: loads Claude's per-project memory
+  (`~/.claude/projects/<repo>/memory/`) at session start, so both tools read
+  and write the same memories.
+- `hooks/claude-parity.json`: wires up the two hooks above.
+
 ## Skills
 
 Typed by me (`disable-model-invocation`, so they never fire on their own):

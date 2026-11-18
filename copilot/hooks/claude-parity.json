@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "hooks": {
+    "SessionStart": [{ "type": "command", "bash": "$HOME/.copilot/scripts/claude-memory.sh", "timeoutSec": 5 }],
+    "PreToolUse": [{ "type": "command", "bash": "$HOME/.copilot/scripts/guard.sh", "timeoutSec": 5 }]
+  }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install this config into Claude Code by symlinking the skills, commands and
 # agents folders plus CLAUDE.md into ~/.claude, and making the helper scripts
-# executable. If ~/.copilot exists, the same skills folder and CLAUDE.md are
+# executable. If ~/.copilot exists, the same skills, agents and CLAUDE.md are
 # linked into GitHub Copilot CLI too — SKILL.md is a shared open format, so both
 # agents read the exact same files.
 #
@@ -54,12 +54,19 @@ if [ -d "$COPILOT_DIR" ]; then
   say ""
   say "GitHub Copilot CLI detected at $COPILOT_DIR — linking the same files:"
   link "$REPO/claude/skills"    "$COPILOT_DIR/skills"
+  link "$REPO/claude/agents"    "$COPILOT_DIR/agents"
   link "$REPO/claude/CLAUDE.md" "$COPILOT_DIR/copilot-instructions.md"
+  # Copilot-only pieces that make it behave like Claude Code: statusline,
+  # Claude's permission rules as a hook, and Claude's per-project memory.
+  link "$REPO/copilot/statusline.sh" "$COPILOT_DIR/statusline.sh"
+  link "$REPO/copilot/scripts"       "$COPILOT_DIR/scripts"
+  run "mkdir -p '$COPILOT_DIR/hooks'"
+  link "$REPO/copilot/hooks/claude-parity.json" "$COPILOT_DIR/hooks/claude-parity.json"
 fi
 
 say ""
 say "Making helper scripts executable…"
-run "chmod +x '$REPO'/scripts/*.sh"
+run "chmod +x '$REPO'/scripts/*.sh '$REPO'/copilot/statusline.sh '$REPO'/copilot/scripts/*.sh"
 
 say ""
 say "Done. Next steps:"

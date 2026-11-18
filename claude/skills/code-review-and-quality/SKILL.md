@@ -1,6 +1,6 @@
 ---
 name: code-review-and-quality
-description: House code-review checklist covering review order, severity labels, and the issues this user flags most (reuse, scope, over-engineering, comments, generated files). Use whenever reviewing a diff: your own change before committing, inside implement and review-pr, or when asked to review local changes. Pair it with the built-in code-review skill, which hunts for bugs.
+description: "House code-review checklist covering review order, severity labels, and the issues this user flags most (reuse, scope, over-engineering, comments, generated files). Use whenever reviewing a diff: your own change before committing, inside implement and review-pr, or when asked to review local changes. Pair it with the built-in code-review skill, which hunts for bugs."
 ---
 
 # Code review checklist
